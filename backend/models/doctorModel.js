@@ -27,17 +27,6 @@ const doctorSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    email: {
-        type: String,
-        required: true,
-        trim: true,
-        lowercase: true
-    },
-    passwod : {
-        type: String,
-        required: true,
-        trim: true
-    },
     status: {
         type: String,
         enum: ['approval pending', 'working', 'not working', 'suspended'],
@@ -47,4 +36,5 @@ const doctorSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('Doctor', doctorSchema);
+module.exports =
+  mongoose.models.Doctor || mongoose.model("Doctor", doctorSchema);

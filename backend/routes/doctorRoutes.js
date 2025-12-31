@@ -14,6 +14,6 @@ router.get('/appointments/:appointmentId', getAppointmentDetails);
 router.get('/patients/:patientId/history', getPatientHistory);
 
 // Route to create medical Records of the patient
-router.post("/medical-records", createMedicalRecords);
+router.post("/:appointmentId/medical-records", createMedicalRecords);
 
 module.exports = router;

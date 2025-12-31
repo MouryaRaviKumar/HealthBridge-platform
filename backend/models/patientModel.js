@@ -30,19 +30,10 @@ const patientSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    password: {
-        type: String,
-        required: true,
-    },
-    medicalHistory: {
-        type: [String],
-        default: [],
-    },
+    medicalHistory: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "MedicalRecord"
+    }],
 }, {
     timestamps: true,
 });

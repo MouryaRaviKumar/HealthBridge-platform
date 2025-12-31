@@ -4,8 +4,7 @@ const asyncHandler = require("express-async-handler");
 //Route         : GET /admin/doctors
 //Access        : Private/Admin
 const getAllDoctors = asyncHandler(async (req, res) => {
-    // Logic to get all doctors from the database
-    res.status(200).json({ message: "List of all doctors" });
+    
 });
 
 //Description   : Get all pending doctors
