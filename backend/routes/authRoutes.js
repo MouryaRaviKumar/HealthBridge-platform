@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerPatient, registerDoctor, loginUser , registerUser , loginAdmin } = require('../Controller/authController');
+const { registerPatient, registerDoctor, loginUser , registerAdmin , loginAdmin } = require('../Controller/authController');
 
 // Define routes and link them to controller functions
 
@@ -13,8 +13,8 @@ router.post('/register-doctor', registerDoctor);
 //Route: POST /auth/login
 router.post('/login', loginUser);
 
-//Route: POST /auth/register
-router.post('/register', registerUser);
+//Route: POST /auth/admin-register
+router.post('/admin-register', registerAdmin);
 
 //Route : POST /auth/admin-login
 router.post('/admin-login', loginAdmin);

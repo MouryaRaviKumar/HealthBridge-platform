@@ -39,7 +39,6 @@ const registerPatient = asyncHandler(async (req, res) => {
         gender,
         bloodgroup,
         contactNumber,
-        email: normalizedEmail,
     });
 
     res.status(201).json({
@@ -50,8 +49,7 @@ const registerPatient = asyncHandler(async (req, res) => {
         gender,
         bloodgroup,
         contactNumber,
-        email: normalizedEmail,
-        token : generateToken(newUser._id),
+        token : generateToken(newUser),
     })
 });
 
@@ -89,23 +87,21 @@ const registerDoctor = asyncHandler(async (req, res) => {
     });
 
     const newDoctor = await Doctor.create({
-        userId : newUser._id,
+        user : newUser._id,
         name,
         department,
         experience,
-        contactInfo,
-        email : normalizedEmail,    
+        contactInfo,   
     });
 
     res.status(201).json({
         id : newDoctor._id,
-        userId : newUser._id,
+        user : newUser._id,
         name,
         department,
         experience,
         contactInfo,
-        email : normalizedEmail,
-        token : generateToken(newUser._id)
+        token : generateToken(newUser)
     })
 
 });
@@ -114,14 +110,32 @@ const registerDoctor = asyncHandler(async (req, res) => {
 //Route        : POST /auth/login
 //Access       : Public
 const loginUser = asyncHandler(async (req, res) => {
-    // Logic for logging in a user would go here
-    res.status(200).json({ msg: 'User logged in successfully' });
+    const { email, password } = req.body;
+    if(!email || !password){
+        res.status(400)
+        throw new Error("Please fill all the fields");
+    }
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ email : normalizedEmail });
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+        res.status(200).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token : generateToken(user),
+        });
+    } else {
+        res.status(401);
+        throw new Error('Invalid email or password');
+    }
 });
 
 // Description  : Register ADMIN user
-// Route        : POST /auth/register
+// Route        : POST /auth/admin-register
 // Access       : Public
-const registerUser = asyncHandler(async (req, res) => {
+const registerAdmin = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
@@ -129,20 +143,20 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new Error('Please fill all the fields');
     }
 
+    const normalizedEmail = email.toLowerCase();
     // Check if user already exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email : normalizedEmail });
     if (userExists) {
         res.status(400);
         throw new Error('User already exists');
     }
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create ADMIN user
     const newUser = await User.create({
         name,
-        email,
+        email : normalizedEmail,
         password: hashedPassword,      // assume password hashing in pre-save hook
         role: 'ADMIN', // force ADMIN role
     });
@@ -152,7 +166,7 @@ const registerUser = asyncHandler(async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
-        token : generateToken(newUser._id),
+        token : generateToken(newUser),
     });
 });
 
@@ -161,7 +175,12 @@ const registerUser = asyncHandler(async (req, res) => {
 //Access       : Public
 const loginAdmin = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    if(!email || !password){
+        res.status(400)
+        throw new Error("Please fill all the fields");
+    }
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ email : normalizedEmail });
 
     if (user && user.role === 'ADMIN' && (await bcrypt.compare(password, user.password))) { 
         res.status(200).json({
@@ -169,11 +188,11 @@ const loginAdmin = asyncHandler(async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            token : generateToken(user._id),
+            token : generateToken(user),
         });
     } else {
         res.status(401);
-        throw new Error('Invalid credentials or not an ADMIN user');
+        throw new Error('Invalid credentials');
     }
 });
 
@@ -181,13 +200,15 @@ module.exports = {
     registerPatient,
     registerDoctor,
     loginUser,
-    registerUser,
+    registerAdmin,
     loginAdmin
 };
 
 //Generate a JWT Token
-const generateToken = (id) => {
-    return jwt.sign({ id },process.env.JWT_SECRET,{
-        expiresIn : '30d',
-    })
+const generateToken = (user) => {
+    return jwt.sign(
+        { id: user._id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '30d' }
+    );
 };
