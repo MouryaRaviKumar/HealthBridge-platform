@@ -7,6 +7,7 @@ const patientRoute = require("./routes/patientRoute");
 const doctorRoutes = require("./routes/doctorRoutes");
 const connectDB = require("./config/db");
 const adminRoutes = require("./routes/adminRoutes");
+const { errorHandler } = require("./middleware/errorMiddleware");
 
 // Connect to the database
 connectDB();    
@@ -31,6 +32,8 @@ app.use("/admin",adminRoutes);
 app.use((req, res, next) => {
     res.status(404).json({ message: "Route not found" });
 });
+
+app.use(errorHandler);
 
 // Starting the server
 app.listen(port,()=>{

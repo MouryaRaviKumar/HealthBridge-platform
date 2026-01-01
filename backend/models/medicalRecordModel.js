@@ -74,4 +74,6 @@ medicalRecordSchema.post("save", async function (doc) {
     }
 });
 
-module.exports = mongoose.model('MedicalRecord', medicalRecordSchema);
+module.exports =
+  mongoose.models.MedicalRecord ||
+  mongoose.model("MedicalRecord", medicalRecordSchema);
