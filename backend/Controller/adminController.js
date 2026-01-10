@@ -8,15 +8,14 @@ const MedicalRecord = require("../models/medicalRecordModel");
 //Route         : GET /admin/doctors
 //Access        : Private/Admin
 const getAllDoctors = asyncHandler(async (req, res) => {
-    const doctors = await Doctor.find({}).lean();
-    res.status(200).json(doctors);
+    res.status(200).json(res.paginatedResults);
 });
 
 //Description   : Get all pending doctors
 //Route         : GET /admin/doctors/pending
 //Access        : Private/Admin
 const getPendingDoctors = asyncHandler(async (req, res) => {
-    const pendingDoctors = await Doctor.find({ status: "pending" }).lean();
+    const pendingDoctors = await Doctor.find({ status: "approval pending" }).lean();
     res.status(200).json(pendingDoctors);
 });
 
@@ -29,18 +28,21 @@ const approveDoctor = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error("Invalid doctor ID");
     }
-    const doctor = await Doctor.findById(doctorId);
-    if (!doctor) {
-        res.status(404);
-        throw new Error("Doctor not found");
-    }
-    if (doctor.status !== "pending") {
-        res.status(400);
-        throw new Error("Doctor is not in pending status");
-    }
-    doctor.status = "working";
-    await doctor.save();
-    res.status(200).json({ message: "Doctor approved successfully" });
+
+        const doctor = await Doctor.findById(doctorId);
+        if (!doctor) {
+            res.status(404);
+            throw new Error("Doctor not found");
+        }
+        if (doctor.status !== "approval pending") {
+            res.status(400);
+            throw new Error("Doctor is not in pending status");
+        }
+        doctor.status = "working";
+        await doctor.save();
+        
+        res.status(200).json({ message: "Doctor approved successfully" });
+    
 });
 
 //Description   : Update doctor status
@@ -55,12 +57,11 @@ const updateDoctorStatus = asyncHandler(async (req, res) => {
         throw new Error("Invalid doctor ID");
     }
 
-    const allowedStatuses = ["pending", "working", "suspended"];
+    const allowedStatuses = ["approval pending", "working", "suspended"];
     if (!allowedStatuses.includes(status)) {
         res.status(400);
         throw new Error("Invalid status value");
     }
-
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
         res.status(404);
@@ -68,12 +69,11 @@ const updateDoctorStatus = asyncHandler(async (req, res) => {
     }
 
     if (doctor.status === status) {
-        return res.status(200).json(doctor);
+        return res.status(204).end();
     }
 
     doctor.status = status;
     await doctor.save();
-
     res.status(200).json(doctor);
 });
 
@@ -81,8 +81,7 @@ const updateDoctorStatus = asyncHandler(async (req, res) => {
 //Route         : GET /admin/patients
 //Access        : Private/Admin
 const getAllPatients = asyncHandler(async (req, res) => {
-    const patients = await Patient.find({}).lean();
-    res.status(200).json(patients);
+    res.status(200).json(res.paginatedResults);
 });
 
 //Description   : Get patient details
@@ -94,7 +93,7 @@ const getPatientDetails = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error("Invalid patient ID");
     }
-    const patient = await Patient.findById(patientId);
+    const patient = await Patient.findById(patientId).lean();
     if (!patient) {
         res.status(404);
         throw new Error("Patient not found");

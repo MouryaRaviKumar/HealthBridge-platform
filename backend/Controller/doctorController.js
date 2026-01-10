@@ -1,3 +1,6 @@
+const mongoose = require("mongoose");
+const Patient = require("../models/patientModel");
+const MedicalRecord = require("../models/medicalRecordModel");
 const asyncHandler = require("express-async-handler");
 const Doctor = require("../Models/doctorModel");
 const Appointment = require("../Models/appointmentModel");
@@ -11,7 +14,7 @@ const getAllAppointments = asyncHandler(async(req,res)=>{
         res.status(400);
         throw new Error("Doctor not found");
     }
-    const appointments = await Appointment.find({ doctor: doctorId });
+    const appointments = await Appointment.find({ doctor: doctorId }).lean();
     res.status(200).json(appointments);
 })
 
@@ -66,25 +69,26 @@ const createMedicalRecords = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error("Diagnosis and prescription are required");
     }
-
-    // Find appointment
-    const appointment = await Appointment.findById(appointmentId);
-    if (!appointment) {
-        res.status(404);
-        throw new Error("Appointment not found");
+    try {
+        // Find appointment
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            res.status(404);
+            throw new Error("Appointment not found");
+        }
+        // Create medical record
+        const medicalRecord = await MedicalRecord.create({
+            patient: appointment.patient,
+            doctor: doctorId,
+            appointment: appointmentId,
+            diagnosis,
+            prescriptions: prescription,
+            dosandonts
+        });
+        res.status(201).json(medicalRecord);
+    }catch(err){
+        throw err;
     }
-
-    // Create medical record
-    const medicalRecord = await MedicalRecord.create({
-        patient: appointment.patient,
-        doctor: doctorId,
-        appointment: appointmentId,
-        diagnosis,
-        prescriptions: prescription,
-        dosandonts
-    });
-
-    res.status(201).json(medicalRecord);
 });
 
 module.exports = {

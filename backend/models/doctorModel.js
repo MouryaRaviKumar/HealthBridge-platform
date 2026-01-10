@@ -15,7 +15,19 @@ const doctorSchema = new mongoose.Schema({
     department: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        enum: [
+            'Cardiology',
+            'Neurology',
+            'Orthopedics',
+            'Pediatrics',
+            'Dermatology',
+            'Gynecology',
+            'Oncology',
+            'ENT',
+            'Psychiatry',
+            'General Medicine'
+        ]
     },
     experience: {
         type: Number,

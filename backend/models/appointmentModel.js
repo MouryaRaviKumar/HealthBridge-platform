@@ -44,3 +44,7 @@ appointmentSchema.index(
   { doctor: 1, appointmentDate: 1, timeSlot: 1 },
   { unique: true }
 );
+
+module.exports =
+  mongoose.models.Appointment ||
+  mongoose.model('Appointment', appointmentSchema);

@@ -14,43 +14,53 @@ const registerPatient = asyncHandler(async (req, res) => {
         res.status(400)
         throw new Error("Please fill all the fields");
     }
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const normalizedEmail = email.toLowerCase();
+        const userExists = await User.findOne({ email: normalizedEmail }).session(session);
+        if(userExists){
+            res.status(409)
+            throw new Error("User already exists");
+        }
+        
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-    const normalizedEmail = email.toLowerCase();
-    const userExists = await User.findOne({ email: normalizedEmail });
-    if(userExists){
-        res.status(409)
-        throw new Error("User already exists");
+        const [newUser] = await User.create([{
+            name , 
+            email: normalizedEmail ,
+            password : hashedPassword,
+            role : 'PATIENT'
+        }],{session});
+
+        const [newPatient] = await Patient.create([{
+            user : newUser._id,
+            name,
+            age,
+            gender,
+            bloodgroup,
+            contactNumber,
+        }],{session});
+
+        await session.commitTransaction();
+
+        res.status(201).json({
+            id : newPatient._id,
+            userId : newUser._id,
+            name,
+            age,
+            gender,
+            bloodgroup,
+            contactNumber,
+            token : generateToken(newUser),
+        })
+    }catch(err){
+        await session.abortTransaction();
+        throw err;
+    }finally{
+        session.endSession()
     }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newUser = await User.create({
-        name , 
-        email: normalizedEmail ,
-        password : hashedPassword,
-        role : 'PATIENT'
-    });
-
-    const newPatient = await Patient.create({
-        user : newUser._id,
-        name,
-        age,
-        gender,
-        bloodgroup,
-        contactNumber,
-    });
-
-    res.status(201).json({
-        id : newPatient._id,
-        userId : newUser._id,
-        name,
-        age,
-        gender,
-        bloodgroup,
-        contactNumber,
-        token : generateToken(newUser),
-    })
 });
 
 //Description  : Register a new doctor
@@ -59,7 +69,7 @@ const registerPatient = asyncHandler(async (req, res) => {
 const registerDoctor = asyncHandler(async (req, res) => {
     const { name , department , experience , contactInfo , email , password } = req.body;
     
-    if(!name || !department || !experience || !contactInfo || !email || !password ){
+    if(!name || !department || experience === undefined || !contactInfo || !email || !password ){
         res.status(400)
         throw new Error("Please fill all the fields");
     }
@@ -68,42 +78,48 @@ const registerDoctor = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error("Experience must be a valid number");
     }
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const normalizedEmail = email.toLowerCase();
+        const userExists = await User.findOne({ email : normalizedEmail }).session(session);
+        if(userExists){
+            res.status(409)
+            throw new Error("User already exists");
+        }
 
-    const normalizedEmail = email.toLowerCase();
-    const userExists = await User.findOne({ email : normalizedEmail });
-    if(userExists){
-        res.status(409)
-        throw new Error("User already exists");
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const [newUser] = await User.create([{
+            name,
+            email : normalizedEmail,
+            password : hashedPassword,
+            role : 'DOCTOR'
+        }], {session});
+
+        const [newDoctor] = await Doctor.create([{
+            user : newUser._id,
+            name,
+            department,
+            experience,
+            contactInfo,   
+        }], {session});
+        await session.commitTransaction();
+        res.status(201).json({
+            id : newDoctor._id,
+            user : newUser._id,
+            name,
+            department,
+            experience,
+            contactInfo,
+            token : generateToken(newUser)
+        });
+    }catch(err){
+        await session.abortTransaction();
+        throw err;
+    }finally{
+        session.endSession()
     }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newUser = await User.create({
-        name,
-        email : normalizedEmail,
-        password : hashedPassword,
-        role : 'DOCTOR'
-    });
-
-    const newDoctor = await Doctor.create({
-        user : newUser._id,
-        name,
-        department,
-        experience,
-        contactInfo,   
-    });
-
-    res.status(201).json({
-        id : newDoctor._id,
-        user : newUser._id,
-        name,
-        department,
-        experience,
-        contactInfo,
-        token : generateToken(newUser)
-    })
-
 });
 
 //Description  : Login user (patient or doctor)
@@ -142,32 +158,40 @@ const registerAdmin = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Please fill all the fields');
     }
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const normalizedEmail = email.toLowerCase();
+        // Check if user already exists
+        const userExists = await User.findOne({ email : normalizedEmail }).session(session);
+        if (userExists) {
+            res.status(400);
+            throw new Error('User already exists');
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-    const normalizedEmail = email.toLowerCase();
-    // Check if user already exists
-    const userExists = await User.findOne({ email : normalizedEmail });
-    if (userExists) {
-        res.status(400);
-        throw new Error('User already exists');
+        // Create ADMIN user
+        const [newUser] = await User.create([{
+            name,
+            email : normalizedEmail,
+            password: hashedPassword,      // assume password hashing in pre-save hook
+            role: 'ADMIN', // force ADMIN role
+        }], {session});
+        await session.commitTransaction();
+        res.status(201).json({
+            _id: newUser._id,
+            name: newUser.name,
+            email: newUser.email,
+            role: newUser.role,
+            token : generateToken(newUser),
+        });
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    } finally {
+        session.endSession();
     }
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create ADMIN user
-    const newUser = await User.create({
-        name,
-        email : normalizedEmail,
-        password: hashedPassword,      // assume password hashing in pre-save hook
-        role: 'ADMIN', // force ADMIN role
-    });
-
-    res.status(201).json({
-        _id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        token : generateToken(newUser),
-    });
 });
 
 //Description  : Login ADMIN user

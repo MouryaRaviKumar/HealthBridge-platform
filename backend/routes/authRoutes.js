@@ -15,7 +15,7 @@ router.post('/register-doctor', registerDoctor);
 router.post('/login', loginUser);
 
 //Route: POST /auth/admin-register
-router.post('/admin-register', adminOnly , registerAdmin);
+router.post('/admin-register', registerAdmin);
 
 //Route : POST /auth/admin-login
 router.post('/admin-login', loginAdmin);

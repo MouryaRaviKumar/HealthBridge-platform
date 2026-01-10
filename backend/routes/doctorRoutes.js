@@ -7,6 +7,7 @@ const { doctorOnly } = require("../middleware/DoctorMiddleware");
 
 // Route to get all appointments of a particular doctor
 router.get('/appointments', protect, doctorOnly, getAllAppointments);
+
 // Route to get details of a particular appointment
 router.get('/appointments/:appointmentId', protect, doctorOnly, getAppointmentDetails);
 
