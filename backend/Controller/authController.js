@@ -1,9 +1,19 @@
+const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel');
 const Patient = require("../models/patientModel");
 const Doctor = require("../models/doctorModel");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+
+//Generate a JWT Token
+const generateToken = (user) => {
+    return jwt.sign(
+        { id: user._id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '30d' }
+    );
+};
 
 //Description  : Register a new patient
 //Route        : POST /auth/register-patient
@@ -46,15 +56,15 @@ const registerPatient = asyncHandler(async (req, res) => {
         await session.commitTransaction();
 
         res.status(201).json({
-            id : newPatient._id,
-            userId : newUser._id,
+            _id: newPatient._id,
+            userId: newUser._id,
             name,
             age,
             gender,
             bloodgroup,
             contactNumber,
-            token : generateToken(newUser),
-        })
+            token: generateToken(newUser),
+        });
     }catch(err){
         await session.abortTransaction();
         throw err;
@@ -106,13 +116,13 @@ const registerDoctor = asyncHandler(async (req, res) => {
         }], {session});
         await session.commitTransaction();
         res.status(201).json({
-            id : newDoctor._id,
-            user : newUser._id,
+            _id: newDoctor._id,
+            userId: newUser._id,
             name,
             department,
             experience,
             contactInfo,
-            token : generateToken(newUser)
+            token: generateToken(newUser)
         });
     }catch(err){
         await session.abortTransaction();
@@ -228,11 +238,3 @@ module.exports = {
     loginAdmin
 };
 
-//Generate a JWT Token
-const generateToken = (user) => {
-    return jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: '30d' }
-    );
-};

@@ -11,11 +11,15 @@ const { getAllDoctors,
     } = require("../Controller/adminController");
 const { adminOnly } = require("../middleware/adminOnlyMiddleware");
 const { protect } = require("../middleware/authMiddleware");
-const paginate = require("../middleware/paginationMiddleware");
+const { paginationMiddleware } = require("../middleware/paginationMiddleware");
+const Doctor = require("../models/doctorModel");
+const Patient = require("../models/patientModel");
+
 // Admin Routes
 
 // Get all doctors
-router.get("/doctors", protect, adminOnly, paginate("Doctor"), getAllDoctors);
+router.get("/doctors", protect, adminOnly, paginationMiddleware(Doctor), getAllDoctors);
+
 // Get all pending doctors
 router.get("/doctors/pending", protect, adminOnly, getPendingDoctors);
 
@@ -26,7 +30,8 @@ router.put("/doctors/:doctorId/approve", protect, adminOnly, approveDoctor);
 router.put("/doctor/:doctorId/status", protect, adminOnly, updateDoctorStatus);
 
 // Get all patients
-router.get("/patients", protect, adminOnly, paginate("Patient"), getAllPatients);
+router.get("/patients", protect, adminOnly, paginationMiddleware(Patient), getAllPatients);
+
 
 // Get patient details
 router.get("/patients/:patientId", protect, adminOnly, getPatientDetails);

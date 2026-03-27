@@ -23,35 +23,9 @@ const medicalRecordSchema = new mongoose.Schema({
         trim: true
     },
     prescriptions: {
-        type: [{
-            _id: false,
-            medication: {
-                type: String,
-                required: true,
-                trim: true
-            },
-            dosage: {
-                type: String,
-                required: true,
-                trim: true
-            },
-            frequency: {
-                type: String,
-                enum: [
-                    "Once a day",
-                    "Twice a day",
-                    "Thrice a day",
-                    "As needed"
-                ],
-                required: true
-            }
-        }],
-        validate: {
-            validator: function (v) {
-                return Array.isArray(v) && v.length > 0;
-            },
-            message: "At least one prescription is required"
-        }
+        type: String,
+        required: true,
+        trim: true
     },
     dosandonts: {
         type: String,

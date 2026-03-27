@@ -2,18 +2,14 @@ const mongoose = require("mongoose");
 const Patient = require("../models/patientModel");
 const MedicalRecord = require("../models/medicalRecordModel");
 const asyncHandler = require("express-async-handler");
-const Doctor = require("../Models/doctorModel");
-const Appointment = require("../Models/appointmentModel");
+const Doctor = require("../models/doctorModel");
+const Appointment = require("../models/appointmentModel");
 
 //Description       Get all appointments of a particular doctor
 //Route             GET /doctor/appointments
 //Access            Private
 const getAllAppointments = asyncHandler(async(req,res)=>{
-    const doctorId = req.doctor.id;
-    if(!doctorId){
-        res.status(400);
-        throw new Error("Doctor not found");
-    }
+    const doctorId = req.doctor._id;
     const appointments = await Appointment.find({ doctor: doctorId }).lean();
     res.status(200).json(appointments);
 })
@@ -39,7 +35,7 @@ const getPatientHistory = asyncHandler(async(req,res)=>{
 
     // Find patient and select only medicalHistory
     const patient = await Patient
-        .findOne({ user: patientId })
+        .findById(patientId)
         .select("medicalHistory");
 
     if (!patient) {
@@ -56,7 +52,7 @@ const getPatientHistory = asyncHandler(async(req,res)=>{
 const createMedicalRecords = asyncHandler(async (req, res) => {
     const { appointmentId } = req.params;
     const { diagnosis, prescription, dosandonts } = req.body;
-    const doctorId = req.doctor.id;
+    const doctorId = req.doctor._id;
 
     // Validate appointmentId
     if (!mongoose.Types.ObjectId.isValid(appointmentId)) {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { registerPatient, registerDoctor, loginUser , registerAdmin , loginAdmin } = require('../Controller/authController');
-const { adminOnly } = require('../Middleware/adminOnlyMiddleware');
+const { adminOnly } = require('../middleware/adminOnlyMiddleware');
 
 // Define routes and link them to controller functions
 

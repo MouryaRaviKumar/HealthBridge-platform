@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Appointment = require('../models/appointmentModel');
-const MedicalRecord = require('../Models/medicalRecordModel');
-const Doctor = require('../Models/doctorModel');
+const MedicalRecord = require('../models/medicalRecordModel');
+const Doctor = require('../models/doctorModel');
 
 //Description:  Create a new appointment
 //Route:        POST /patient/appointments
@@ -47,7 +47,7 @@ const createAppointment = asyncHandler(async (req, res) => {
     }
     //Create the appointment
     const appointment = await Appointment.create({
-        patient: req.user.id,
+        patient: req.patient._id,
         doctor,
         appointmentDate : selectedDate,
         timeSlot
@@ -61,7 +61,7 @@ const createAppointment = asyncHandler(async (req, res) => {
 //Access:       Private 
 const getMyAppointments = asyncHandler(async (req, res) => {
     //Fetch appointments for the logged-in patient
-    const appointments = await Appointment.find({ patient: req.user.id }).populate('doctor', 'name specialization');
+    const appointments = await Appointment.find({ patient: req.patient._id }).populate('doctor', 'name department');
     //Return the appointments
     res.status(200).json(appointments);
 });
@@ -72,16 +72,25 @@ const getMyAppointments = asyncHandler(async (req, res) => {
 const getMyMedicalRecords = asyncHandler(async (req, res) => {
     //Fetch medical records for the logged-in patient
     const records = await MedicalRecord
-    .find({ patient: req.user.id })
-    .populate('doctor', 'name specialization')
+    .find({ patient: req.patient._id })
+    .populate('doctor', 'name department')
     .sort({ createdAt: -1 });
 
     //Return the medical records
     res.status(200).json(records);
 });
 
+//Description:  Get all approved doctors for booking
+//Route:        GET /patient/doctors
+//Access:       Private 
+const getApprovedDoctors = asyncHandler(async (req, res) => {
+    const doctors = await Doctor.find({ status: 'working' }).select('-user');
+    res.status(200).json(doctors);
+});
+
 module.exports = {
     createAppointment,
     getMyAppointments,
-    getMyMedicalRecords
+    getMyMedicalRecords,
+    getApprovedDoctors
 };  

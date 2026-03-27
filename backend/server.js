@@ -25,16 +25,16 @@ const limiter = rateLimiter({
 });
 
 // Using the auth routes
-app.use("/auth",limiter , AuthRoutes);
+app.use("/api/auth",limiter , AuthRoutes);
 
 // Using the patient routes
-app.use("/patient",limiter ,patientRoute);
+app.use("/api/patient",limiter ,patientRoute);
 
 // Using the doctor routes
-app.use("/doctor",limiter ,doctorRoutes);
+app.use("/api/doctor",limiter ,doctorRoutes);
 
 // Using the Admin Router
-app.use("/admin",limiter ,adminRoutes);
+app.use("/api/admin",limiter ,adminRoutes);
 
 // 404 Error handling for undefined routes
 app.use((req, res, next) => {

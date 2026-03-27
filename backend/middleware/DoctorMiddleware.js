@@ -5,6 +5,10 @@ const doctorOnly = asyncHandler((req, res, next) => {
         res.status(403);
         throw new Error("Doctor access only");
     }
+    if (!req.doctor || req.doctor.status !== "working") {
+        res.status(403);
+        throw new Error("Doctor account is not active or pending approval");
+    }
     next();
 });
 
